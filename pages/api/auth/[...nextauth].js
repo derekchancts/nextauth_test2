@@ -46,9 +46,9 @@ export default NextAuth({
     //   issuer: process.env.AUTH0_ISSUER
     // }),
   ],
-  // pages: {
-  //   signIn: "/signin"
-  // },
+  pages: {
+    signIn: "/signin"
+  },
   adapter: MongoDBAdapter(clientPromise),
   database: {
     type: "mongodb",
