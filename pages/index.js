@@ -1,4 +1,6 @@
+import Head from 'next/head'
 import { useSession, signIn, signOut } from "next-auth/react"
+
 
 export default function Component() {
   const { data: session, status } = useSession()
@@ -14,6 +16,9 @@ export default function Component() {
     </>
   }
   return <>
+    <Head>
+      <meta name="google-site-verification" content="2bKXKjH4iusvHP1i2G7c7Ww_wviketHXQnKMcQQrwz8" />
+    </Head>
     Not signed in <br/>
     <button onClick={() => signIn()}>Sign in</button>
   </>
