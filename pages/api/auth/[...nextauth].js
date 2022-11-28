@@ -10,6 +10,10 @@ import { MongoDBAdapter } from "@next-auth/mongodb-adapter";
 import clientPromise from '../../../lib/mongodb'
 import connectDB from '../../../config/connectDB';
 
+import CredentialsProvider from "next-auth/providers/credentials";
+// import connectDB from '../../../config/connectDB';
+import Users from '../../../models/userModel';
+import bcrypt from 'bcrypt';
 
 connectDB();
 
@@ -17,17 +21,17 @@ connectDB();
 
 export default NextAuth({ 
   providers: [
-    EmailProvider({
-      server: {
-        host: process.env.EMAIL_SERVER_HOST,
-        port: process.env.EMAIL_SERVER_PORT,
-        auth: {
-          user: process.env.EMAIL_SERVER_USER,
-          pass: process.env.EMAIL_SERVER_PASSWORD,
-        },
-      },
-      from: process.env.EMAIL_FROM,
-    }),
+    // EmailProvider({
+    //   server: {
+    //     host: process.env.EMAIL_SERVER_HOST,
+    //     port: process.env.EMAIL_SERVER_PORT,
+    //     auth: {
+    //       user: process.env.EMAIL_SERVER_USER,
+    //       pass: process.env.EMAIL_SERVER_PASSWORD,
+    //     },
+    //   },
+    //   from: process.env.EMAIL_FROM,
+    // }),
     GitHubProvider({
       clientId: process.env.GITHUB_ID,
       clientSecret: process.env.GITHUB_SECRET
@@ -39,7 +43,7 @@ export default NextAuth({
     GoogleProvider({
       // clientId: process.env.GOOGLE_CLIENT_ID,
       // clientSecret: process.env.GOOGLE_CLIENT_SECRET
-      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientId: process.env.GOOGLE_CLIENT_IDw,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET
     }),
     // Auth0Provider({
@@ -47,6 +51,25 @@ export default NextAuth({
     //   clientSecret: process.env.AUTH0_CLIENT_SECRET,
     //   issuer: process.env.AUTH0_ISSUER
     // }),
+
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text", placeholder: "jsmith" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials, req) {
+        // const email = credentials.email;
+        // const password = credentials.password;
+        const { email, password } = credentials;
+        // console.log({email})
+        // console.log({password})
+
+        const user = await Users.findOne({ email });
+        if (!user) throw new Error("You haven't registered yet");
+        if (user) return signInUser({ password, user });
+      }
+    })
   ],
   pages: {
     signIn: "/signin"
@@ -71,3 +94,13 @@ export default NextAuth({
     encryption: true
   },
 })
+
+
+const signInUser = async ({ password, user }) => {
+  if (!password || password === "undefined") throw new Error("Please enter password")
+  
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) throw new Error("Password not correct");
+  // if matched, then return the user
+  return user;
+}
